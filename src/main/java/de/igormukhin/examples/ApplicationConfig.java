@@ -1,12 +1,12 @@
 package de.igormukhin.examples;
 
-import java.util.Arrays;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
-import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +19,19 @@ public class ApplicationConfig {
 	
     @Bean
     public CacheManager cacheManager() {
-        SimpleCacheManager cacheManager = new SimpleCacheManager();
-        cacheManager.setCaches(Arrays.asList(new ConcurrentMapCache("dataCache")));
-        return cacheManager;
+    	CacheConfiguration cacheConfiguration = new CacheConfiguration();
+        cacheConfiguration.setName("dataCache");
+        cacheConfiguration.setMemoryStoreEvictionPolicy("LRU");
+        cacheConfiguration.setMaxEntriesLocalHeap(1000);
+        PersistenceConfiguration persistenceConfiguration = new PersistenceConfiguration();
+        persistenceConfiguration.setStrategy(PersistenceConfiguration.Strategy.NONE.name());
+		cacheConfiguration.persistence(persistenceConfiguration );
+
+        net.sf.ehcache.config.Configuration config = new net.sf.ehcache.config.Configuration();
+        config.addCache(cacheConfiguration);
+
+        net.sf.ehcache.CacheManager cacheManager = net.sf.ehcache.CacheManager.newInstance(config);
+        return new EhCacheCacheManager(cacheManager);
     }
 
 }

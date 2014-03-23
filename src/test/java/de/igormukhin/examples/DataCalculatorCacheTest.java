@@ -3,10 +3,13 @@ package de.igormukhin.examples;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -17,6 +20,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class DataCalculatorCacheTest {
 
 	@Autowired DataCalculator calculator;
+	
+	@Autowired CacheManager cacheManager;
+	
+	@Before
+	public void before() {
+		// clear the ehCache explicitly because even @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+		// doesn't do it. EhCache somehow keeps the results between separate Spring Contexts. 
+		((EhCacheCacheManager) cacheManager).getCacheManager().clearAll();
+	}
 	
 	@Test
 	public void testCalculation() {
